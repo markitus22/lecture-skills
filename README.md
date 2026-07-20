@@ -1,9 +1,9 @@
 # lecture-skills
 
-Two [Claude Code](https://claude.com/claude-code) skills that turn a lecture — YouTube video or raw transcript — into a clean, typeset HTML study document with rendered LaTeX and reading prompts.
+Two [Claude Code](https://claude.com/claude-code) skills that turn a lecture - YouTube video or raw transcript - into a clean, typeset HTML study document with rendered LaTeX and reading prompts.
 
-- **`lecture-yt`** — one-shot pipeline: give it a YouTube URL, it fetches the transcript and hands off to `lecture-reader`. Slash command: `/lecture-yt <youtube-url-or-video-id>`.
-- **`lecture-reader`** — takes a transcript file (VTT, SRT, or plain text) you already have and produces the typeset HTML document. Slash command: `/lecture-reader` (also invoked internally by `lecture-yt`).
+- **`lecture-yt`** - one-shot pipeline: give it a YouTube URL, it fetches the transcript and hands off to `lecture-reader`. Slash command: `/lecture-yt <youtube-url-or-video-id>`.
+- **`lecture-reader`** - takes a transcript file (VTT, SRT, or plain text) you already have and produces the typeset HTML document. Slash command: `/lecture-reader` (also invoked internally by `lecture-yt`).
 
 ## Install
 
