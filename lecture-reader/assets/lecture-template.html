@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title><!-- LECTURE TITLE --></title>
+<script>
+  window.MathJax = { tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] } };
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js" async></script>
+<style>
+  /* ============================================================
+     LECTURE READER DESIGN — extends the typesetter paper system.
+     Do not restyle; only fill content inside .wrap.
+     Lecture components:
+       .eq        display equation block; must contain a .gloss line
+       .eq-unsure add to .eq when reconstruction is a best guess
+       .gap       missing-visual box (what the lecture showed on screen)
+       .ask       reading prompt at section start (one line)
+       .aside     lecturer tangent, rendered quiet and skippable
+       .rows      segment map for multi-part lectures
+     Section kickers carry block type: SETUP / DEFINITION /
+     DERIVATION / CLAIM / EXAMPLE.
+     ============================================================ */
+  :root {
+    --paper: #F6F4EF;
+    --panel: #FFFFFF;
+    --ink: #1B2A30;
+    --ink-soft: #45585F;
+    --line: #DCD8CF;
+    --blueprint: #2C5D69;
+    --blueprint-deep: #1E4650;
+    --amber: #C6852E;
+    --accent-a: #B5562E;
+    --accent-b: #2C5D69;
+    --accent-c: #6A6438;
+    --code-bg: #1B2A30;
+    --code-ink: #D9E4E2;
+    --shadow: 0 1px 2px rgba(27,42,48,.06), 0 8px 28px rgba(27,42,48,.07);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background:
+      radial-gradient(circle at 12% -5%, rgba(44,93,105,.06), transparent 42%),
+      radial-gradient(circle at 98% 8%, rgba(198,133,46,.05), transparent 40%),
+      var(--paper);
+    color: var(--ink);
+    font-family: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  .wrap { max-width: 760px; margin: 0 auto; padding: 0 28px; }
+
+  .mono {
+    font-family: ui-monospace, 'SF Mono', 'JetBrains Mono', 'Roboto Mono', Menlo, Consolas, monospace;
+  }
+
+  /* ---------- Masthead ---------- */
+  header.mast { padding: 74px 0 40px; border-bottom: 1px solid var(--line); }
+  .eyebrow {
+    font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+    font-size: 12px; letter-spacing: .22em; text-transform: uppercase;
+    color: var(--blueprint); margin: 0 0 20px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .eyebrow::before { content: ""; width: 26px; height: 1px; background: var(--blueprint); display: inline-block; }
+  h1 {
+    font-size: clamp(34px, 6vw, 52px);
+    line-height: 1.08; letter-spacing: -.012em;
+    margin: 0 0 22px; font-weight: 600;
+  }
+  h1 em { font-style: italic; color: var(--accent-a); }
+  .standfirst { font-size: 20px; color: var(--ink-soft); margin: 0; max-width: 60ch; }
+
+  /* ---------- Thesis panel (the lecture's own central claim) ---------- */
+  .thesis {
+    margin: 44px 0; padding: 30px 32px;
+    background: var(--blueprint-deep); color: #EAF1F0;
+    border-radius: 14px; box-shadow: var(--shadow);
+  }
+  .thesis .label {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 11px; letter-spacing: .2em; text-transform: uppercase;
+    color: #9CC2C0; margin: 0 0 12px;
+  }
+  .thesis p { margin: 0; font-size: 21px; line-height: 1.5; }
+  .thesis b { color: #F1C88A; font-weight: 600; }
+
+  /* ---------- Section rhythm ---------- */
+  section { padding: 46px 0; border-bottom: 1px solid var(--line); }
+  h2 { font-size: 27px; letter-spacing: -.01em; margin: 0 0 8px; font-weight: 600; }
+  .kicker {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 12px; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--amber); margin: 0 0 18px;
+  }
+  p { margin: 0 0 18px; }
+  p:last-child { margin-bottom: 0; }
+  .lead-in { color: var(--ink-soft); }
+  strong { font-weight: 600; }
+
+  /* ---------- Reading prompt (one per section, right after h2) ---------- */
+  .ask {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 12.5px; letter-spacing: .04em;
+    color: var(--blueprint);
+    background: #EDF1EF; border: 1px dashed #BFD0CE;
+    border-radius: 9px; padding: 10px 14px; margin: 0 0 22px;
+  }
+  .ask::before { content: "READ WITH: "; font-weight: 600; letter-spacing: .14em; }
+
+  /* ---------- Display equation with plain-words gloss ---------- */
+  .eq {
+    background: var(--panel); border: 1px solid var(--line);
+    border-left: 4px solid var(--blueprint);
+    border-radius: 12px; padding: 20px 24px 16px; margin: 24px 0;
+    box-shadow: var(--shadow);
+    overflow-x: auto;
+  }
+  .eq .gloss {
+    margin: 12px 0 0; padding-top: 12px;
+    border-top: 1px solid var(--line);
+    font-size: 15px; color: var(--ink-soft);
+  }
+  .eq .gloss b { color: var(--ink); font-weight: 600; }
+  .eq-unsure { border-left-color: var(--accent-a); }
+  .eq-unsure .flagnote {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--accent-a); margin: 0 0 8px;
+  }
+
+  /* ---------- Missing-visual gap box ---------- */
+  .gap {
+    background: #FBF7EE; border: 1px solid #ECDFC4;
+    border-radius: 12px; padding: 18px 22px; margin: 24px 0;
+  }
+  .gap .tag {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 11px; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--amber); margin: 0 0 8px;
+  }
+  .gap p { margin: 0; font-size: 15.5px; color: var(--ink-soft); }
+  .gap .ts {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 12.5px; color: var(--blueprint); font-weight: 600;
+  }
+
+  /* ---------- Aside: kept but quiet ---------- */
+  .aside {
+    margin: 22px 0; padding: 4px 0 4px 20px;
+    border-left: 3px solid var(--line);
+    color: var(--ink-soft); font-size: 15px; font-style: italic;
+  }
+  .aside .tag {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase;
+    font-style: normal; color: var(--ink-soft);
+    display: block; margin-bottom: 4px; opacity: .7;
+  }
+
+  /* ---------- Analogy pull (lecturer's own analogies) ---------- */
+  .analogy {
+    border-left: 3px solid var(--amber);
+    padding: 4px 0 4px 20px; margin: 22px 0;
+    color: var(--ink-soft); font-style: italic;
+  }
+
+  /* ---------- Code / verbatim snippet ---------- */
+  .snippet {
+    background: var(--code-bg); color: var(--code-ink);
+    border-radius: 12px; padding: 20px 22px;
+    font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+    font-size: 13.5px; line-height: 1.7;
+    overflow-x: auto; margin: 22px 0; box-shadow: var(--shadow);
+  }
+  .snippet .c { color: #7FA6A2; }
+  .snippet .k { color: #F1C88A; }
+
+  /* ---------- Segment map rows (multi-part lectures) ---------- */
+  .rows { margin-top: 10px; }
+  .row {
+    display: grid; grid-template-columns: 190px 1fr; gap: 18px;
+    padding: 14px 0; border-top: 1px solid var(--line);
+    align-items: baseline;
+  }
+  .row:first-child { border-top: none; }
+  .row-name {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 14px; font-weight: 600; color: var(--blueprint-deep);
+  }
+  .row-desc { font-size: 15.5px; color: var(--ink-soft); }
+  .row-now .row-name { color: var(--accent-a); }
+  @media (max-width: 560px) { .row { grid-template-columns: 1fr; gap: 4px; } }
+
+  /* ---------- Callout (max one per section) ---------- */
+  .callout {
+    background: #FBF7EE; border: 1px solid #ECDFC4;
+    border-radius: 12px; padding: 22px 24px; margin: 26px 0 0;
+  }
+  .callout .tag {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 11px; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--accent-a); margin: 0 0 8px;
+  }
+  .callout p { margin: 0; font-size: 16px; }
+
+  /* ---------- Footer close ---------- */
+  footer { padding: 50px 0 80px; text-align: center; color: var(--ink-soft); }
+  footer .mark {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 12px; letter-spacing: .2em; text-transform: uppercase;
+    color: var(--blueprint);
+  }
+  footer p { margin: 14px 0 0; font-size: 16px; }
+
+  /* ---------- Motion (respects reduced-motion) ---------- */
+  @media (prefers-reduced-motion: no-preference) {
+    section, header.mast > *, .thesis { animation: rise .6s ease both; }
+    section:nth-child(2){animation-delay:.04s}
+    @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- MASTHEAD: eyebrow = "LECTURE // <field>", h1 = lecture topic with one <em> word,
+       standfirst = lecture title, source channel/course, and segment position -->
+  <header class="mast">
+    <p class="eyebrow"><!-- LECTURE // FIELD --></p>
+    <h1><!-- headline with one <em>highlighted</em> word --></h1>
+    <p class="standfirst"><!-- title, source, segment N of M, minutes covered --></p>
+  </header>
+
+  <!-- THESIS: the lecture's own central claim, not an invented summary -->
+  <div class="thesis">
+    <p class="label">What this lecture argues</p>
+    <p><!-- one line, <b>key phrase</b> bolded --></p>
+  </div>
+
+  <!-- OPTIONAL SEGMENT MAP: only for multi-part lectures, mark current with .row-now -->
+
+  <!-- SECTIONS: kicker = block type, then h2, then .ask prompt, then content.
+       Components: .eq (+.gloss), .gap, .aside, .analogy, .snippet, .callout -->
+  <section>
+    <p class="kicker"><!-- SETUP / DEFINITION / DERIVATION / CLAIM / EXAMPLE --></p>
+    <h2><!-- section headline --></h2>
+    <p class="ask"><!-- what problem is this section solving, phrased for this section --></p>
+    <p><!-- lecturer's argument, lightly repaired --></p>
+  </section>
+
+  <footer>
+    <p class="mark"><!-- LECTURE READER --></p>
+    <p><!-- one closing line: what to do next (watch flagged visuals / next segment) --></p>
+  </footer>
+
+</div>
+</body>
+</html>
