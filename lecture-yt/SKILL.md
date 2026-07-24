@@ -1,6 +1,6 @@
 ---
 name: lecture-yt
-description: 'Fetch a YouTube lecture''s transcript and turn it straight into a readable, typeset HTML study document in one step. PRIMARY TRIGGER is the slash command "/lecture-yt <youtube-url-or-video-id>". Chains a bundled fetch_transcript.py script with the lecture-reader skill''s cleaning, reconstruction, and typesetting steps, so the user does not have to run the fetch script and then separately invoke /lecture-reader. Do NOT trigger when the user already has a transcript file or pasted transcript text in hand - use lecture-reader directly for those. Do NOT trigger for non-YouTube content.'
+description: Fetch a YouTube lecture transcript and turn it straight into a readable, typeset HTML study document in one step. PRIMARY TRIGGER is the slash command /lecture-yt URL-or-video-id. Chains a bundled fetch_transcript.py script with the lecture-reader skill cleaning, reconstruction, and typesetting steps. Do NOT trigger when the user already has a transcript file or pasted transcript text in hand - use lecture-reader directly for those. Do NOT trigger for non-YouTube content.
 ---
 
 # Lecture from YouTube
